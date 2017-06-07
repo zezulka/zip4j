@@ -27,13 +27,14 @@ import net.lingala.zip4j.model.FileHeader;
 import net.lingala.zip4j.model.UnzipParameters;
 import net.lingala.zip4j.model.ZipModel;
 import net.lingala.zip4j.progress.ProgressMonitor;
+import net.lingala.zip4j.unzip.filters.UnzipFilter;
 import net.lingala.zip4j.util.InternalZipConstants;
 import net.lingala.zip4j.util.Zip4jUtil;
 
 public class Unzip {
 
     private ZipModel zipModel;
-    private UnzipNameFilter filter = null;
+    private UnzipFilter filter = null;
 
     public Unzip(ZipModel zipModel) throws ZipException {
 
@@ -44,7 +45,7 @@ public class Unzip {
         this.zipModel = zipModel;
     }
 
-    public Unzip(ZipModel zipModel, UnzipNameFilter filter) {
+    public Unzip(ZipModel zipModel, UnzipFilter filter) {
         this.zipModel = zipModel;
         this.filter = filter;
     }
@@ -54,7 +55,7 @@ public class Unzip {
         extractAllSatisfying(null, unzipParameters, outPath, progressMonitor, runInThread);
     }
 
-    public void extractAllSatisfying(UnzipNameFilter filter, final UnzipParameters unzipParameters, final String outPath,
+    public void extractAllSatisfying(UnzipFilter filter, final UnzipParameters unzipParameters, final String outPath,
             final ProgressMonitor progressMonitor, boolean runInThread) throws ZipException {
 
         CentralDirectory centralDirectory = zipModel.getCentralDirectory();
@@ -88,9 +89,9 @@ public class Unzip {
 
     }
 
-    private void initExtractAllSatisfying(UnzipNameFilter filter, List fileHeaders, UnzipParameters unzipParameters,
+    private void initExtractAllSatisfying(UnzipFilter filter, List fileHeaders, UnzipParameters unzipParameters,
             ProgressMonitor progressMonitor, String outPath) throws ZipException {
-        if(filter != null) {
+        if (filter != null) {
             fileHeaders = Arrays.asList(fileHeaders.stream().filter(filter).toArray());
         }
         for (int i = 0; i < fileHeaders.size(); i++) {
@@ -119,6 +120,7 @@ public class Unzip {
 
         if (runInThread) {
             Thread thread = new Thread(InternalZipConstants.THREAD_NAME) {
+                @Override
                 public void run() {
                     try {
                         initExtractFile(fileHeader, outPath, unzipParameters, newFileName, progressMonitor);
@@ -171,12 +173,7 @@ public class Unzip {
                 checkOutputDirectoryStructure(fileHeader, outPath, newFileName);
 
                 UnzipEngine unzipEngine = new UnzipEngine(zipModel, fileHeader);
-                try {
-                    unzipEngine.unzipFile(progressMonitor, outPath, newFileName, unzipParameters);
-                } catch (Exception e) {
-                    progressMonitor.endProgressMonitorError(e);
-                    throw new ZipException(e);
-                }
+                unzipEngine.unzipFile(progressMonitor, outPath, newFileName, unzipParameters);
             }
         } catch (ZipException e) {
             progressMonitor.endProgressMonitorError(e);

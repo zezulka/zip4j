@@ -14,18 +14,17 @@
 * limitations under the License. 
 */
 
-package net.lingala.zip4j.unzip;
+package net.lingala.zip4j.unzip.filters;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Predicate;
 
 import net.lingala.zip4j.model.FileHeader;
 
-public final class UnzipNameFilter implements Predicate<FileHeader> {
+public final class NameUnzipFilter implements UnzipFilter {
     private final List<String> satisfactoryPhrases;
     
-    public UnzipNameFilter(String... args) {
+    public NameUnzipFilter(String... args) {
         this.satisfactoryPhrases = Arrays.asList(args);
     }
     
